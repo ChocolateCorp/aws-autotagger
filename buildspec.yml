@@ -10,7 +10,7 @@ phases:
     commands:
       - pip install -r requirements.txt
       - pip install aws-cli --upgrade
-      -aws cloudformation package --template-file template.yml --output-template-file template_post.yml --s3-bucket s3tempbucket-s3bucket-bg5uudpuhi3h
+      - aws cloudformation package --template-file template.yml --output-template-file template_post.yml --s3-bucket s3tempbucket-s3bucket-bg5uudpuhi3h
   post_build:
     commands:
       - echo Build completed on `date`
