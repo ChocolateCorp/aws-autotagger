@@ -209,7 +209,7 @@ Resources:
             - '        if ids:'
             - '            for resourceid in ids:'
             - '                print(''Tagging resource '' + resourceid)'
-            - '            ec2.create_tags(Resources=ids, Tags=[{''Key'': ''CreatorNetID'', ''Value'': user})'
+            - '            ec2.create_tags(Resources=ids, Tags=[{''Key'': ''CreatorNetID'', ''Value'': user}])'
             - ''
             - '        logger.info('' Remaining time (ms): '' + str(context.get_remaining_time_in_millis()) + ''\n'')'
             - '        return True'
