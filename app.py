@@ -45,6 +45,8 @@ def lambda_handler(event, context):
         ec2_client = boto3.resource('ec2')
         lambda_client = boto3.client('lambda')
         rds_client = boto3.client('rds')
+        s3_client = boto3.client('s3')
+        ddb_client = boto3.client('dynamodb')
 
         if eventname == 'CreateVolume':
             ids.append(detail['responseElements']['volumeId'])
@@ -96,6 +98,19 @@ def lambda_handler(event, context):
             try:
                 dbResourceArn = detail['responseElements']['dBInstanceArn']
                 rds_client.add_tags_to_resource(ResourceName=dbResourceArn,Tags=[{'Key':'CreatorNetID','Value': user}])
+            except:
+                pass
+        elif eventname == 'CreateBucket':
+            try:
+                bucket_name = detail['requestParameters']['bucketName']
+                bucket = s3_client.BucketTagging(bucket_name)
+                s3_client.bucket.put(Tagging={'TagSet': [{'Key':'CreatorNetID','Value': user}]})
+            except:
+                pass
+        elif eventname == 'CreateTable':
+            try:
+                tableArn = detail['responseElements']['tableDescription']['tableArn']
+                ddb_client.tag_resource(ResourceArn=tableArn,Tags=[{'Key':'CreatorNetID','Value': user}])
             except:
                 pass
         else:
