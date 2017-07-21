@@ -19,8 +19,6 @@ def lambda_handler(event, context):
         detail = event['detail']
         eventname = detail['eventName']
         arn = detail['userIdentity']['arn']
-        functionArn = detail['responseElements']['functionArn']
-        #ddResourceArn = detail['responseElements']['databaseArn']
         principal = detail['userIdentity']['principalId']
         userType = detail['userIdentity']['type']
 
@@ -44,9 +42,9 @@ def lambda_handler(event, context):
                 logger.error('errorMessage: ' + detail['errorMessage'])
             return False
 
-        ec2 = boto3.resource('ec2')
-        client = boto3.client('lambda')
-        #rds = boto3.resource('rds')
+        ec2_client = boto3.resource('ec2')
+        lambda_client = boto3.client('lambda')
+        rds_client = boto3.client('rds')
 
         if eventname == 'CreateVolume':
             ids.append(detail['responseElements']['volumeId'])
@@ -59,7 +57,7 @@ def lambda_handler(event, context):
             logger.info(ids)
             logger.info('number of instances: ' + str(len(ids)))
 
-            base = ec2.instances.filter(InstanceIds=ids)
+            base = ec2_client.instances.filter(InstanceIds=ids)
 
             #loop through the instances
             for instance in base:
@@ -77,18 +75,26 @@ def lambda_handler(event, context):
             logger.info(ids)
             
         elif eventname == 'CreateFunction20150331':
-            client.tag_resource(Resource=functionArn,Tags={'CreatorNetID': user})
+            try:
+                functionArn = detail['responseElements']['functionArn']
+                lambda_client.tag_resource(Resource=functionArn,Tags={'CreatorNetID': user})
+            except:
+                pass
             
-        #elif eventname == 'CreateDBInstance':
-            #rds.add_tags_to_resource(Resource=)
-            
+        elif eventname == 'CreateDBInstance':
+            try:
+                dbResourceArn = detail['responseElements']['dBInstanceArn']
+                rds_client.add_tags_to_resource(ResourceName=dbResourceArn,Tags=[{'Key':'CreatorNetID','Value': user}])
+                logger.info("Got to line 84")
+            except:
+                pass
         else:
             logger.warning('Not supported action')
 
         if ids:
             for resourceid in ids:
                 print('Tagging resource ' + resourceid)
-            ec2.create_tags(Resources=ids, Tags=[{'Key': 'CreatorNetID', 'Value': user}])
+            ec2_client.create_tags(Resources=ids, Tags=[{'Key': 'CreatorNetID', 'Value': user}])
 
         logger.info(' Remaining time (ms): ' + str(context.get_remaining_time_in_millis()) + '\n')
         return True
