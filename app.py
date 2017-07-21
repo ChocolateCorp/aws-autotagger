@@ -33,18 +33,20 @@ def lambda_handler(event, context):
         logger.info('region: ' + str(region))
         logger.info('eventName: ' + str(eventname))
         logger.info('detail: ' + str(detail))
-
+        '''
         if not detail['responseElements']:
-            logger.warning('Not responseElements found')
+            logger.warning('No responseElements found')
             if detail['errorCode']:
                 logger.error('errorCode: ' + detail['errorCode'])
             if detail['errorMessage']:
                 logger.error('errorMessage: ' + detail['errorMessage'])
             return False
-
+        '''
         ec2_client = boto3.resource('ec2')
         lambda_client = boto3.client('lambda')
         rds_client = boto3.client('rds')
+        s3_client = boto3.resource('s3')
+        ddb_client = boto3.client('dynamodb')
 
         if eventname == 'CreateVolume':
             ids.append(detail['responseElements']['volumeId'])
@@ -96,6 +98,19 @@ def lambda_handler(event, context):
             try:
                 dbResourceArn = detail['responseElements']['dBInstanceArn']
                 rds_client.add_tags_to_resource(ResourceName=dbResourceArn,Tags=[{'Key':'CreatorNetID','Value': user}])
+            except:
+                pass
+        elif eventname == 'CreateBucket':
+            try:
+                bucket_name = detail['requestParameters']['bucketName']
+                s3_client.BucketTagging(bucket_name).put(Tagging={'TagSet': [{'Key':'CreatorNetID','Value': user}]})
+            except Exception as e:
+                logger.error('Something went wrong: ' + str(e))
+                pass
+        elif eventname == 'CreateTable':
+            try:
+                tableArn = detail['responseElements']['tableDescription']['tableArn']
+                ddb_client.tag_resource(ResourceArn=tableArn,Tags=[{'Key':'CreatorNetID','Value': user}])
             except:
                 pass
         else:
