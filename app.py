@@ -33,15 +33,15 @@ def lambda_handler(event, context):
         logger.info('region: ' + str(region))
         logger.info('eventName: ' + str(eventname))
         logger.info('detail: ' + str(detail))
-
+'''
         if not detail['responseElements']:
-            logger.warning('Not responseElements found')
+            logger.warning('No responseElements found')
             if detail['errorCode']:
                 logger.error('errorCode: ' + detail['errorCode'])
             if detail['errorMessage']:
                 logger.error('errorMessage: ' + detail['errorMessage'])
             return False
-
+'''
         ec2_client = boto3.resource('ec2')
         lambda_client = boto3.client('lambda')
         rds_client = boto3.client('rds')
@@ -103,11 +103,10 @@ def lambda_handler(event, context):
         elif eventname == 'CreateBucket':
             try:
                 bucket_name = detail['requestParameters']['bucketName']
-                logger.info(detail['requestParameters'])
-                logger.info(bucket_name)
                 bucket = s3_client.BucketTagging(bucket_name)
                 s3_client.bucket.put(Tagging={'TagSet': [{'Key':'CreatorNetID','Value': user}]})
             except:
+                logger.error('Something went wrong: ' + str(e))
                 pass
         elif eventname == 'CreateTable':
             try:
