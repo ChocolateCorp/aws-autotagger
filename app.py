@@ -103,6 +103,8 @@ def lambda_handler(event, context):
         elif eventname == 'CreateBucket':
             try:
                 bucket_name = detail['requestParameters']['bucketName']
+                logger.info(detail['requestParameters'])
+                logger.info(bucket_name)
                 bucket = s3_client.BucketTagging(bucket_name)
                 s3_client.bucket.put(Tagging={'TagSet': [{'Key':'CreatorNetID','Value': user}]})
             except:
