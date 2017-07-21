@@ -80,12 +80,22 @@ def lambda_handler(event, context):
                 lambda_client.tag_resource(Resource=functionArn,Tags={'CreatorNetID': user})
             except:
                 pass
-            
+        elif eventname == 'UpdateFunctionConfiguration20150331v2':
+            try:
+                functionArn = detail['responseElements']['functionArn']
+                lambda_client.tag_resource(Resource=functionArn,Tags={'LastConfigModifiedByNetID': user})
+            except:
+                pass
+        elif eventname == 'UpdateFunctionCode20150331v2':
+            try:
+                functionArn = detail['responseElements']['functionArn']
+                lambda_client.tag_resource(Resource=functionArn,Tags={'LastCodeModifiedByNetID': user})
+            except:
+                pass
         elif eventname == 'CreateDBInstance':
             try:
                 dbResourceArn = detail['responseElements']['dBInstanceArn']
                 rds_client.add_tags_to_resource(ResourceName=dbResourceArn,Tags=[{'Key':'CreatorNetID','Value': user}])
-                logger.info("Got to line 84")
             except:
                 pass
         else:
