@@ -33,20 +33,13 @@ def lambda_handler(event, context):
         logger.info('region: ' + str(region))
         logger.info('eventName: ' + str(eventname))
         logger.info('detail: ' + str(detail))
-        '''
-        if not detail['responseElements']:
-            logger.warning('No responseElements found')
-            if detail['errorCode']:
-                logger.error('errorCode: ' + detail['errorCode'])
-            if detail['errorMessage']:
-                logger.error('errorMessage: ' + detail['errorMessage'])
-            return False
-        '''
+
         ec2_client = boto3.resource('ec2')
         lambda_client = boto3.client('lambda')
         rds_client = boto3.client('rds')
         s3_client = boto3.resource('s3')
         ddb_client = boto3.client('dynamodb')
+        efs_client = boto3.client('efs')
 
         if eventname == 'CreateVolume':
             ids.append(detail['responseElements']['volumeId'])
@@ -111,10 +104,19 @@ def lambda_handler(event, context):
             try:
                 tableArn = detail['responseElements']['tableDescription']['tableArn']
                 ddb_client.tag_resource(ResourceArn=tableArn,Tags=[{'Key':'CreatorNetID','Value': user}])
-            except:
+            except Exception as e:
+                logger.error('Exception thrown at CreateTable' + str(e))
                 pass
+        elif eventname == 'CreateMountTarget':
+            try:
+                system_id = detail['requestParameters']['fileSystemId']
+                efs_client.create_tags(FileSystemId=system_id, Tags=[{'Key':'CreatorNetID','Value': user}])
+            except Exception as e:
+                logger.error('Exception thrown at CreateMountTarget' + str(e))
+                pass
+        # todo: EMR and Glacier also possible candidates
         else:
-            logger.warning('Not supported action')
+            logger.warning('No matching event name found in the Auto Tag lambda function (Ln 118)')
 
         if ids:
             for resourceid in ids:
